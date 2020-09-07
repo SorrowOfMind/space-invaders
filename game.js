@@ -24,12 +24,30 @@ class Player {
         this.y = y,
         this.w = w,
         this.h = h,
-        this.color = "green"
+        this.color = "green",
+        this.velX = 0,
+        this.speed = 5
     }
 
     draw() {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.w, this.h)
+    }
+
+    move() {
+        if (controller.left) {
+            this.velX = - this.speed;
+            this.x += this.velX;
+        }
+        if (controller.right) {
+            this.velX = this.speed;
+            this.x += this.velX;
+        }
+    }
+
+    borderCollision() {
+        if (this.x <= 0) this.x = 0;
+        if (this.x >= width - this.w) this.x = width - this.w;
     }
 }
 
@@ -61,17 +79,20 @@ const createInvaders = () => {
 }
 
 
-bg.addEventListener('load', function() {
-    ctx.drawImage(this, 0, 0);
-})
+
 
 let gameLoop = () => {
+    ctx.drawImage(bg, 0, 0);
     player.draw();
+    player.move();
+    player.borderCollision();
 
     window.requestAnimationFrame(gameLoop)
 }
 
+bg.addEventListener('load', function() {
+    window.requestAnimationFrame(gameLoop);
+});
 
 window.addEventListener('keydown', controller.checkKeys);
 window.addEventListener('keyup', controller.checkKeys);
-window.requestAnimationFrame(gameLoop);
