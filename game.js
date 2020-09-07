@@ -14,8 +14,18 @@ class Invader {
     constructor(x, y) {
         this.x = x,
         this.y = y,
-        this.r = 0
+        this.r = 0,
+        this.color = 'red'
     }
+}
+
+const drawInvaders = () => {
+    ctx.fillStyle = 'red';
+        for (let i = 0; i < 100; i++) {
+            ctx.beginPath();
+            ctx.arc((i % 20) * BOX*2 + 50, Math.floor(i / 20) * BOX*2 + 50, BOX, 0, 2 * Math.PI);
+            ctx.fill();
+        }
 }
 
 class Player {
@@ -72,20 +82,14 @@ const controller = {
     }
 }
 
-const createInvaders = () => {
-    for(let i = 0; i < 20; i++) {
-
-    }
-}
-
-
-
 
 let gameLoop = () => {
     ctx.drawImage(bg, 0, 0);
     player.draw();
     player.move();
     player.borderCollision();
+    drawInvaders();
+
 
     window.requestAnimationFrame(gameLoop)
 }
