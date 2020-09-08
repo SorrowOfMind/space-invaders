@@ -13,6 +13,7 @@ const bg = new Image();
 bg.src = './assets/bg.png';
 
 let invaders = [];
+let beams = [];
 
 class Invader {
     constructor(x, y, radius) {
@@ -50,6 +51,28 @@ const createInvaders = () => {
     }
 }
 
+class Beam {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+        this.width = BOX * 2;
+        this.height = BOX * 2;
+        this.color = 'yellow';
+        this.velY = 0;
+        this.speed = 5;
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    move() {
+        this.velY = this.speed;
+        this.y -= this.velY;
+    }
+}
+
 class Player {
     constructor(x,y,w,h) {
         this.x = x,
@@ -81,28 +104,29 @@ class Player {
         if (this.x <= 0) this.x = 0;
         if (this.x >= width - this.w) this.x = width - this.w;
     }
+
+    shoot() {
+        if (controller.shoot) {
+            let beam = new Beam(this.x, this.y);
+            beams.push(beam);
+            beam.draw();
+            controller.shoot = false;
+        }
+    }
 }
 
 let player = new Player(width*0.5 - BOX*2, height*0.9, BOX*2, BOX*4);
 
-class Beam {
-    constructor(x,y) {
-        this.x = x;
-        this.y = y;
-        this.width = BOX * 2;
-        this.height = BOX * 2;
-        this.color = 'yellow';
-    }
-}
+
 
 const controller = {
     right: false,
     left: false,
+    shoot: false,
 
     checkKeys(e) {
         let state = e.type === 'keydown' ? true : false;
         let key = e.keyCode;
-
         switch(key) {
             case 37:
                 controller.left = state;
@@ -110,6 +134,8 @@ const controller = {
             case 39:
                 controller.right = state;
                 break;
+            case 32:
+                controller.shoot = state;
         }
     }
 }
@@ -124,11 +150,17 @@ let gameLoop = () => {
         invaders[i].move();
     }
 
-
-
     player.draw();
     player.move();
     player.borderCollision();
+    player.shoot();
+
+    if (beams.length) {
+        for (let i = 0; i < beams.length; i++) {
+            beams[i].draw();
+            beams[i].move();
+        }
+    }
 
 
     window.requestAnimationFrame(gameLoop)
