@@ -14,6 +14,7 @@ bg.src = './assets/bg.png';
 
 let invaders = [];
 let beams = [];
+let recycledBeams = [];
 
 class Invader {
     constructor(x, y, radius) {
@@ -46,7 +47,7 @@ class Invader {
 
 const createInvaders = () => {
     for (let i = 0; i < INVADERS; i++) {
-        let invader = new Invader((i % COL) * BOX * 2 + 60, Math.floor(i / COL) * BOX*2 + 50, BOX*0.5)
+        let invader = new Invader((i % COL) * BOX * 2 + 60, Math.floor(i / COL) * BOX*2 + 50, BOX)
         invaders.push(invader);
     }
 }
@@ -70,6 +71,16 @@ class Beam {
     move() {
         this.velY = this.speed;
         this.y -= this.velY;
+    }
+
+    detectBorderCollision() {
+        if (this.y + this.width < 0) {
+            // let oldBeam = beams.shift();
+            beams = beams.filter(beam => !(beam.x === this.x && beam.y === this.y))
+            // console.log('beams', beams)
+            recycledBeams.push(this);
+            // console.log('recycledBeams', recycledBeams)
+        }
     }
 }
 
@@ -107,17 +118,22 @@ class Player {
 
     shoot() {
         if (controller.shoot) {
-            let beam = new Beam(this.x, this.y);
-            beams.push(beam);
-            beam.draw();
+            if (recycledBeams.length) {
+                let newBeam = recycledBeams.shift();
+                newBeam.x = this.x;
+                newBeam.y = this.y;
+                beams.push(newBeam);
+            } else {
+                let beam = new Beam(this.x, this.y);
+                beams.push(beam);
+            }
             controller.shoot = false;
         }
     }
+
 }
 
 let player = new Player(width*0.5 - BOX*2, height*0.9, BOX*2, BOX*4);
-
-
 
 const controller = {
     right: false,
@@ -159,9 +175,9 @@ let gameLoop = () => {
         for (let i = 0; i < beams.length; i++) {
             beams[i].draw();
             beams[i].move();
+            beams[i].detectBorderCollision();
         }
     }
-
 
     window.requestAnimationFrame(gameLoop)
 }
