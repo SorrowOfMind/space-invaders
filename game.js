@@ -40,17 +40,22 @@ class Invader {
     }
 
     detectBorderCollision() {
-        if (this.x + this.r >= width) this.speed = -1;
-        if (this.x - this.r <= 0) this.speed = 1;
+        // if (this.x + this.r >= width) this.speed = -1;
+        // if (this.x - this.r <= 0) this.speed = 1;
+        if (this.x + this.r > width) return true;
+        if (this.x - this.r < 0) return true;
+        return false;
     }
 }
 
 const createInvaders = () => {
     for (let i = 0; i < INVADERS; i++) {
-        let invader = new Invader((i % COL) * BOX * 2 + 60, Math.floor(i / COL) * BOX*2 + 50, BOX)
+        let invader = new Invader((i % COL) * BOX * 2 + 60, Math.floor(i / COL) * BOX * 2 + 50, BOX * 0.5)
         invaders.push(invader);
     }
-}
+};
+
+createInvaders();
 
 class Beam {
     constructor(x,y) {
@@ -75,11 +80,8 @@ class Beam {
 
     detectBorderCollision() {
         if (this.y + this.width < 0) {
-            // let oldBeam = beams.shift();
             beams = beams.filter(beam => !(beam.x === this.x && beam.y === this.y))
-            // console.log('beams', beams)
             recycledBeams.push(this);
-            // console.log('recycledBeams', recycledBeams)
         }
     }
 }
@@ -162,8 +164,16 @@ let gameLoop = () => {
 
     for (let i = 0; i < invaders.length; i++) {
         invaders[i].draw();
-        invaders[i].detectBorderCollision();
-        invaders[i].move();
+        // invaders[i].move();
+        if(invaders[i].detectBorderCollision()) {
+            
+            // console.log(invaders[0].x, invaders[20].x)
+            // for (let j = 0; j < invaders.length; j++) {
+            //     invaders[j].speed *= -1;
+            // }
+            invaders.forEach(inv => inv.speed *= -1);
+        };
+
     }
 
     player.draw();
@@ -182,10 +192,11 @@ let gameLoop = () => {
     window.requestAnimationFrame(gameLoop)
 }
 
+
+
+
 bg.addEventListener('load', function() {
     window.requestAnimationFrame(gameLoop);
 });
-
-createInvaders();
 window.addEventListener('keydown', controller.checkKeys);
 window.addEventListener('keyup', controller.checkKeys);
