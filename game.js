@@ -15,6 +15,7 @@ bg.src = './assets/bg.png';
 let invaders = [];
 let beams = [];
 let recycledBeams = [];
+let gameOver = false;
 
 class Invader {
     constructor(x, y, radius) {
@@ -35,17 +36,16 @@ class Invader {
     }
 
     move() {
-        this.velX = this.speed;
-        this.x += this.velX;
+        this.velY = this.speed;
+        this.y += this.velY;
     }
 
     detectBorderCollision() {
-        // if (this.x + this.r >= width) this.speed = -1;
-        // if (this.x - this.r <= 0) this.speed = 1;
         if (this.x + this.r > width) return true;
         if (this.x - this.r < 0) return true;
         return false;
     }
+
 }
 
 const createInvaders = () => {
@@ -84,6 +84,7 @@ class Beam {
             recycledBeams.push(this);
         }
     }
+
 }
 
 class Player {
@@ -133,6 +134,13 @@ class Player {
         }
     }
 
+    detectInvaderCollision(invX, invY, invR) {
+        if ((this.x < invX + invR && this.x > invX - invR) && this.y < invY + invR) {
+            console.log('invader collision')
+            gameOver = true;
+        }
+    }
+
 }
 
 let player = new Player(width*0.5 - BOX*2, height*0.9, BOX*2, BOX*4);
@@ -163,16 +171,18 @@ let gameLoop = () => {
     ctx.drawImage(bg, 0, 0);
 
     for (let i = 0; i < invaders.length; i++) {
-        invaders[i].draw();
-        // invaders[i].move();
-        if(invaders[i].detectBorderCollision()) {
+        let currentInvader = invaders[i];
+        currentInvader.draw();
+        // currentInvader.move();
+        player.detectInvaderCollision(currentInvader.x, currentInvader.y, currentInvader.r);
+        // if(invaders[i].detectBorderCollision()) {
             
-            // console.log(invaders[0].x, invaders[20].x)
-            // for (let j = 0; j < invaders.length; j++) {
-            //     invaders[j].speed *= -1;
-            // }
-            invaders.forEach(inv => inv.speed *= -1);
-        };
+        //     // console.log(invaders[0].x, invaders[20].x)
+        //     // for (let j = 0; j < invaders.length; j++) {
+        //     //     invaders[j].speed *= -1;
+        //     // }
+        //     invaders.forEach(inv => inv.speed *= -1);
+        // };
 
     }
 
@@ -189,6 +199,9 @@ let gameLoop = () => {
         }
     }
 
+    if (gameOver) {
+        alert('You lost!');
+    }
     window.requestAnimationFrame(gameLoop)
 }
 
