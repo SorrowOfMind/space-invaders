@@ -1,5 +1,7 @@
 const cvs = document.getElementById('gameboard');
 const ctx = cvs.getContext('2d');
+const modal = document.querySelector('.backdrop');
+const btn = modal.querySelector('.play-again');
 
 const width = ctx.canvas.width;
 const height = ctx.canvas.height;
@@ -135,7 +137,7 @@ class Player {
     }
 
     detectInvaderCollision(invX, invY, invR) {
-        if ((this.x < invX + invR && this.x > invX - invR) && this.y < invY + invR) {
+        if ((this.x <= invX + invR && this.x + this.w >= invX - invR) && this.y <= invY + invR) {
             console.log('invader collision')
             gameOver = true;
         }
@@ -173,7 +175,7 @@ let gameLoop = () => {
     for (let i = 0; i < invaders.length; i++) {
         let currentInvader = invaders[i];
         currentInvader.draw();
-        // currentInvader.move();
+        currentInvader.move();
         player.detectInvaderCollision(currentInvader.x, currentInvader.y, currentInvader.r);
         // if(invaders[i].detectBorderCollision()) {
             
@@ -200,8 +202,10 @@ let gameLoop = () => {
     }
 
     if (gameOver) {
-        alert('You lost!');
-    }
+        modal.classList.remove('hidden');
+        invaders = []   ;
+    };
+    
     window.requestAnimationFrame(gameLoop)
 }
 
@@ -213,3 +217,4 @@ bg.addEventListener('load', function() {
 });
 window.addEventListener('keydown', controller.checkKeys);
 window.addEventListener('keyup', controller.checkKeys);
+btn.addEventListener('click', () => window.location.reload());
