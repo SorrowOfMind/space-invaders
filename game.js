@@ -2,12 +2,14 @@ const cvs = document.getElementById('gameboard');
 const ctx = cvs.getContext('2d');
 const modal = document.querySelector('.backdrop');
 const btn = modal.querySelector('.play-again');
+const gameMsg = modal.querySelector('.game-message');
 
 const width = ctx.canvas.width;
 const height = ctx.canvas.height;
 
 const BOX = 10;
 const INVADERS = 100;
+const RADIUS = 10;
 const COL = 20;
 const OFFSET = 50;
 
@@ -17,13 +19,17 @@ bg.src = './assets/bg.png';
 let invaders = [];
 let beams = [];
 let recycledBeams = [];
-let gameOver = false;
+
+let gameState = {
+    gameOver: false,
+    playerWon: false
+}
 
 class Invader {
-    constructor(x, y, radius) {
+    constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.r = radius;
+        this.r = RADIUS;
         this.color = 'red';
         this.velX = 0;
         this.velY = 0;
@@ -43,16 +49,17 @@ class Invader {
     }
 
     detectBorderCollision() {
-        if (this.x + this.r > width) return true;
-        if (this.x - this.r < 0) return true;
-        return false;
+        if (this.y + this.r >= height) {
+            return gameState.gameOver = true
+        };
+
     }
 
 }
 
 const createInvaders = () => {
     for (let i = 0; i < INVADERS; i++) {
-        let invader = new Invader((i % COL) * BOX * 2 + 60, Math.floor(i / COL) * BOX * 2 + 50, BOX * 0.5)
+        let invader = new Invader((i % COL) * BOX * 2 + 60, Math.floor(i / COL) * BOX * 2 + 50)
         invaders.push(invader);
     }
 };
@@ -82,11 +89,10 @@ class Beam {
 
     detectBorderCollision() {
         if (this.y + this.width < 0) {
-            beams = beams.filter(beam => !(beam.x === this.x && beam.y === this.y))
+            beams = beams.filter(beam => beam.x !== this.x && beam.y !== this.y)
             recycledBeams.push(this);
         }
     }
-
 }
 
 class Player {
@@ -136,10 +142,9 @@ class Player {
         }
     }
 
-    detectInvaderCollision(invX, invY, invR) {
-        if ((this.x <= invX + invR && this.x + this.w >= invX - invR) && this.y <= invY + invR) {
-            console.log('invader collision')
-            gameOver = true;
+    detectInvaderCollision(invX, invY) {
+        if ((this.x <= invX + RADIUS && this.x + this.w >= invX - RADIUS) && this.y <= invY + RADIUS) {
+            gameState.gameOver = true;
         }
     }
 
@@ -176,24 +181,31 @@ let gameLoop = () => {
         let currentInvader = invaders[i];
         currentInvader.draw();
         currentInvader.move();
-        player.detectInvaderCollision(currentInvader.x, currentInvader.y, currentInvader.r);
-        // if(invaders[i].detectBorderCollision()) {
-            
-        //     // console.log(invaders[0].x, invaders[20].x)
-        //     // for (let j = 0; j < invaders.length; j++) {
-        //     //     invaders[j].speed *= -1;
-        //     // }
-        //     invaders.forEach(inv => inv.speed *= -1);
-        // };
+        currentInvader.detectBorderCollision();
+        player.detectInvaderCollision(currentInvader.x, currentInvader.y);
 
+        if (beams.length) {
+            for (let j = 0; j < beams.length; j++) {
+                const currentBeamX = beams[j].x;
+                const currentBeamY = beams[j].y;
+                if ((currentBeamX  <= currentInvader.x + RADIUS && currentBeamX  + 20 >= currentInvader.x - RADIUS) && currentBeamY <= currentInvader.y + RADIUS) {
+                    invaders.splice(i, 1);
+                }
+            }
+        }
     }
+
+    if (invaders.length === 0) {
+        gameState.gameOver =  true;
+        gameState.playerWon = true;
+    };
 
     player.draw();
     player.move();
     player.borderCollision();
     player.shoot();
 
-    if (beams.length) {
+    if (beams.length > 0) {
         for (let i = 0; i < beams.length; i++) {
             beams[i].draw();
             beams[i].move();
@@ -201,9 +213,10 @@ let gameLoop = () => {
         }
     }
 
-    if (gameOver) {
+    if (gameState.gameOver) {
+        if (gameState.playerWon) gameMsg.textContent = "You stopped the invasion!"
         modal.classList.remove('hidden');
-        invaders = []   ;
+        invaders = [];
     };
     
     window.requestAnimationFrame(gameLoop)
