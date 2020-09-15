@@ -33,7 +33,7 @@ class Invader {
         this.color = 'red';
         this.velX = 0;
         this.velY = 0;
-        this.speed = 1;
+        this.speed = 0.5;
     }
 
     draw() {
@@ -50,7 +50,8 @@ class Invader {
 
     detectBorderCollision() {
         if (this.y + this.r >= height) {
-            return gameState.gameOver = true
+            gameState.gameOver = true;
+            gameState.playerWon = false;
         };
 
     }
@@ -176,6 +177,18 @@ const controller = {
 
 let gameLoop = () => {
     ctx.drawImage(bg, 0, 0);
+    player.draw();
+    player.move();
+    player.borderCollision();
+    player.shoot();
+
+    if (beams.length > 0) {
+        for (let i = 0; i < beams.length; i++) {
+            beams[i].draw();
+            beams[i].move();
+            beams[i].detectBorderCollision();
+        }
+    }
 
     for (let i = 0; i < invaders.length; i++) {
         let currentInvader = invaders[i];
@@ -190,44 +203,36 @@ let gameLoop = () => {
                 const currentBeamY = beams[j].y;
                 if ((currentBeamX  <= currentInvader.x + RADIUS && currentBeamX  + 20 >= currentInvader.x - RADIUS) && currentBeamY <= currentInvader.y + RADIUS) {
                     invaders.splice(i, 1);
+                    let usedBeam = beams.splice(j,1);
+                    recycledBeams.push(...usedBeam);
+                    
                 }
             }
         }
     }
+    console.log('hi')
+    if (gameState.gameOver) {
+        if (gameState.playerWon) {
+            gameMsg.textContent = "You stopped the invasion!";
+        }
+        else gameMsg.textContent = "Game over!"
+        modal.classList.remove('hidden');
+    };
 
     if (invaders.length === 0) {
         gameState.gameOver =  true;
         gameState.playerWon = true;
     };
-
-    player.draw();
-    player.move();
-    player.borderCollision();
-    player.shoot();
-
-    if (beams.length > 0) {
-        for (let i = 0; i < beams.length; i++) {
-            beams[i].draw();
-            beams[i].move();
-            beams[i].detectBorderCollision();
-        }
-    }
-
-    if (gameState.gameOver) {
-        if (gameState.playerWon) gameMsg.textContent = "You stopped the invasion!"
-        modal.classList.remove('hidden');
-        invaders = [];
-    };
     
-    window.requestAnimationFrame(gameLoop)
+    let loop = window.requestAnimationFrame(gameLoop);
+    if (gameState.gameOver) window.cancelAnimationFrame(loop);
 }
-
-
 
 
 bg.addEventListener('load', function() {
     window.requestAnimationFrame(gameLoop);
 });
+
 window.addEventListener('keydown', controller.checkKeys);
 window.addEventListener('keyup', controller.checkKeys);
 btn.addEventListener('click', () => window.location.reload());
